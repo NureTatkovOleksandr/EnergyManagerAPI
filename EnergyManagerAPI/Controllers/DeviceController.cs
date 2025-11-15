@@ -26,7 +26,7 @@ namespace EnergyManagerAPI.Controllers
         public async Task<IActionResult> Get(int id)
         {
             var userId = User.GetUserId();
-            var device = await _service.GetByIdAsync(id, userId);
+            var device = await _service.GetByIdAsync(id);
             return device != null ? Ok(device) : NotFound();
         }
 

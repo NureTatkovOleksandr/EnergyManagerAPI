@@ -14,7 +14,7 @@ namespace EnergyManagerCore.Services
     {
         Task<IEnumerable<MeasurementDto>> GetByDeviceIdAsync(int deviceId, int userId, DateTime? from = null, DateTime? to = null);
         Task<MeasurementDto?> GetByIdAsync(long id, int userId);
-        Task<MeasurementDto> CreateAsync(CreateMeasurementDto dto, int deviceId, int userId);
+        Task<MeasurementDto> CreateAsync(CreateMeasurementDto dto, int deviceId);
         Task<MeasurementDto?> UpdateAsync(long id, MeasurementDto dto, int userId);
         Task<bool> DeleteAsync(long id, int userId);
     }
@@ -33,7 +33,7 @@ namespace EnergyManagerCore.Services
 
         public async Task<IEnumerable<MeasurementDto>> GetByDeviceIdAsync(int deviceId, int userId, DateTime? from = null, DateTime? to = null)
         {
-            var device = await _deviceService.GetByIdAsync(deviceId, userId);
+            var device = await _deviceService.GetByIdAsync(deviceId);
             if (device == null) throw new UnauthorizedAccessException();
             var measurements = await _repo.GetByDeviceIdAsync(deviceId, from, to);
             return measurements.Select(m => new MeasurementDto
@@ -53,9 +53,9 @@ namespace EnergyManagerCore.Services
             return new MeasurementDto { /* map */ };
         }
 
-        public async Task<MeasurementDto> CreateAsync(CreateMeasurementDto dto, int deviceId, int userId)
+        public async Task<MeasurementDto> CreateAsync(CreateMeasurementDto dto, int deviceId)
         {
-            var device = await _deviceService.GetByIdAsync(deviceId, userId);
+            var device = await _deviceService.GetByIdAsync(deviceId);
             if (device == null) throw new UnauthorizedAccessException();
             var measurement = new Measurement
             {

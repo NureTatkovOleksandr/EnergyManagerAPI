@@ -13,7 +13,7 @@ namespace EnergyManagerCore.Services
     public interface IDeviceService
     {
         Task<IEnumerable<DeviceDto>> GetByHouseIdAsync(int houseId, int userId);
-        Task<DeviceDto?> GetByIdAsync(int id, int userId);
+        Task<DeviceDto?> GetByIdAsync(int id);
         Task<DeviceDto> CreateAsync(CreateDeviceDto dto, int houseId, int userId);
         Task<DeviceDto?> UpdateAsync(int id, DeviceDto dto, int userId);
         Task<bool> DeleteAsync(int id, int userId);
@@ -47,10 +47,10 @@ namespace EnergyManagerCore.Services
             });
         }
 
-        public async Task<DeviceDto?> GetByIdAsync(int id, int userId)
+        public async Task<DeviceDto?> GetByIdAsync(int id)
         {
             var device = await _repo.GetByIdAsync(id);
-            if (device == null || device.House.UserId != userId) return null;
+            if (device == null) return null;
             return new DeviceDto { /* map */ };
         }
 

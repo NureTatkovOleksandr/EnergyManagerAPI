@@ -1,19 +1,25 @@
 ﻿using EnergyManagerCore.Data;
 using EnergyManagerCore.Repositories;
 using EnergyManagerCore.Services;
+using EnergyManagerWeb.Controllers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ============================
+// Database
+// ============================
 string dbPath = Path.Combine(AppContext.BaseDirectory, "EnergyManagerDB.db");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
+// ============================
+// DI Services
+// ============================
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -30,8 +36,29 @@ builder.Services.AddScoped<IDailySummaryRepository, DailySummaryRepository>();
 builder.Services.AddScoped<IDailySummaryService, DailySummaryService>();
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+builder.Services.AddControllersWithViews();
+builder.Services.AddDistributedMemoryCache();
 
-builder.Services.AddControllers(); 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// ============================
+// HttpClient (MVC backend uses API)
+// ============================
+builder.Services.AddHttpClient<MainController>(client =>
+{
+    // ЗДЕСЬ МЕНЯЕМ НА HTTP !!!!
+    client.BaseAddress = new Uri("http://localhost:5033/");
+});
+
+// ============================
+// Swagger
+// ============================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -48,20 +75,31 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-            new string[] { }
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
     });
 });
+
+// ============================
+// CORS
+// ============================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
+
+// ============================
+// JWT
+// ============================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -77,18 +115,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
+
 builder.Services.AddAuthorization();
 
+// ============================
+// Build App
+// ============================
 var app = builder.Build();
 
+// ❌ Больше никаких HTTPS редиректов
+// app.UseHttpsRedirection();  ← удалено
+
 app.UseCors("AllowAll");
-app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EnergyManager API v1"));
-
-
-app.UseHttpsRedirection();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();  
+app.UseSession();
 
-app.Run("http://localhost:5274");
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EnergyManager API v1");
+});
+
+// Controllers
+app.MapControllers();
+
+// MVC routes
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// ❗ Запуск без https://localhost:5274
+app.Run();   // запускает HTTP сервер

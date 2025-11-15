@@ -1,22 +1,26 @@
 ﻿using EnergyManagerCore.Extentions;
 using EnergyManagerCore.Models.DTOs;
 using EnergyManagerCore.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace EnergyManagerAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize] // ← ВСЕ действия требуют авторизацию...
     public class MeasurementController : ControllerBase
     {
         private readonly IMeasurementService _service;
 
-        public MeasurementController(IMeasurementService service) => _service = service;
+        public MeasurementController(IMeasurementService service)
+            => _service = service;
 
         [HttpGet("device/{deviceId}")]
-        public async Task<IActionResult> GetByDeviceId(int deviceId, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+        public async Task<IActionResult> GetByDeviceId(
+            int deviceId,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null)
         {
             try
             {
@@ -37,19 +41,12 @@ namespace EnergyManagerAPI.Controllers
             return measurement != null ? Ok(measurement) : NotFound();
         }
 
+        [AllowAnonymous]  // ← ...НО ЭТОТ метод доступен БЕЗ авторизации
         [HttpPost("device/{deviceId}")]
         public async Task<IActionResult> Create(int deviceId, [FromBody] CreateMeasurementDto dto)
         {
-            try
-            {
-                var userId = User.GetUserId();
-                var measurement = await _service.CreateAsync(dto, deviceId, userId);
-                return CreatedAtAction(nameof(Get), new { id = measurement.Id }, measurement);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Unauthorized();
-            }
+            var measurement = await _service.CreateAsync(dto, deviceId);
+            return CreatedAtAction(nameof(Get), new { id = measurement.Id }, measurement);
         }
 
         [HttpPut("{id}")]
@@ -59,8 +56,6 @@ namespace EnergyManagerAPI.Controllers
             var updated = await _service.UpdateAsync(id, dto, userId);
             return updated != null ? Ok(updated) : NotFound();
         }
-
-        // ... (GetByDeviceId, Get, Create, Update - з попереднього)
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)

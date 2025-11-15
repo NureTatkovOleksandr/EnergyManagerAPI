@@ -13,6 +13,7 @@ namespace EnergyManagerCore.Services
     public interface IHouseService
     {
         Task<IEnumerable<HouseDto>> GetMyHousesAsync(int userId);
+        Task<IEnumerable<DeviceDto>> GetHomeDevices(int houseId);
         Task<HouseDto?> GetByIdAsync(int id, int userId);
         Task<HouseDto> CreateAsync(CreateHouseDto dto, int userId);
         Task<HouseDto?> UpdateAsync(int id, HouseDto dto, int userId);
@@ -37,7 +38,19 @@ namespace EnergyManagerCore.Services
                 TotalArea = h.TotalArea
             });
         }
-
+        public async Task<IEnumerable<DeviceDto>> GetHomeDevices(int houseId)
+        {
+            var meshs = await _repo.GetHomeDevices(houseId);
+            return meshs.Select(m => new DeviceDto()
+            {
+                Id = m.Id,
+                Name = m.Name,
+                HouseId = houseId,
+                Type = m.Type,
+                Identifier = m.Identifier,
+                IsActive = m.IsActive
+            });
+        }
         public async Task<HouseDto?> GetByIdAsync(int id, int userId)
         {
             var house = await _repo.GetByIdAsync(id);

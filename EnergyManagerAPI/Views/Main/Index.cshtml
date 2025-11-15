@@ -1,0 +1,71 @@
+﻿@model EnergyManagerCore.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Energy Manager Dashboard</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <h2>My Houses</h2>
+            <ul id="housesList" class="list-group"></ul>
+        </div>
+        <div class="col-md-4">
+            <h2>Recommendations</h2>
+            <div id="recommendations" class="d-flex flex-column"></div>
+            <button id="autoOptimize" class="btn btn-primary mt-3">Auto Optimize</button>
+            <button id="generateReport" class="btn btn-secondary mt-2">Form Report</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var userId = @Model.UserId;
+
+        // MF-1: Fetch and display houses with consumption
+        fetch(`http://localhost:5274/api/v1/House/houses?usrid=${userId}`)
+            .then(response => response.json())
+            .then(houses => {
+                const housesList = document.getElementById('housesList');
+
+                houses.forEach(house => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.innerHTML = `
+                        <span><strong>${house.name}</strong></span>
+                        <span id="consumption-${house.id}">(Loading...)</span> kWh
+                    `;
+                    housesList.appendChild(li);
+
+                    // Fetch measurements for each house
+                    fetch(`http://localhost:5274/api/v1/House/measurements?houseId=${house.id}`)
+                        .then(res => res.json())
+                        .then(measurements => {
+                            let totalConsumption = 0;
+                            measurements.forEach(m => {
+                                if (m.unit === 'kWh') totalConsumption += m.value;
+                            });
+                            document.getElementById(`consumption-${house.id}`).textContent = totalConsumption.toFixed(2);
+                        })
+                        .catch(error => {
+                            document.getElementById(`consumption-${house.id}`).textContent = 'Error';
+                            console.error('Error fetching measurements:', error);
+                        });
+                });
+            })
+            .catch(error => console.error('Error fetching houses:', error));
+
+        // MF-2: remove broken fetch — houseId undefined
+        // TODO: you need to decide which house to load scenarios for
+
+        document.getElementById('autoOptimize').addEventListener('click', () => {
+            console.log('Auto optimization triggered (not implemented)');
+        });
+
+        document.getElementById('generateReport').addEventListener('click', () => {
+            console.log('Report generation triggered (not implemented)');
+        });
+    </script>
+
+}

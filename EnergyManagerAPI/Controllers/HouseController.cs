@@ -10,7 +10,6 @@ namespace EnergyManagerAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class HouseController : ControllerBase
     {
         private readonly IHouseService _service;
@@ -18,11 +17,26 @@ namespace EnergyManagerAPI.Controllers
         public HouseController(IHouseService service) => _service = service;
 
         // **GET /api/v1/house** - Мої будинки
-        [HttpGet]
-        public async Task<IActionResult> GetMyHouses()
+        [HttpGet("houses")]
+        public async Task<IActionResult> GetMyHouses(int usrid)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            return Ok(await _service.GetMyHousesAsync(userId));
+            var result = await _service.GetMyHousesAsync(usrid);
+
+            if (result != null)
+                return Ok(result);
+
+            return NotFound();
+        }
+
+        [HttpGet("devices")]
+        public async Task<IActionResult> GetDevices(int houseId)
+        {
+            var result = await _service.GetHomeDevices(houseId);
+
+            if (result != null)
+                return Ok(result);
+
+            return NotFound();
         }
 
         [HttpGet("{id}")]

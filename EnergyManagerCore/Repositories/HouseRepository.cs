@@ -1,5 +1,6 @@
 ﻿using EnergyManagerCore.Data;
 using EnergyManagerCore.Models;
+using EnergyManagerCore.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace EnergyManagerCore.Repositories
         Task<House> CreateAsync(House house);
         Task<House?> UpdateAsync(int id, House house);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<Device>> GetHomeDevices(int houseId);
     }
 
     // Repositories/HouseRepository.cs
@@ -32,6 +34,8 @@ namespace EnergyManagerCore.Repositories
         public async Task<IEnumerable<House>> GetByUserIdAsync(int userId)
             => await _context.Houses.Where(h => h.UserId == userId).ToListAsync();
 
+        public async Task<IEnumerable<Device>> GetHomeDevices(int houseId)
+            => await _context.Devices.Where(d => d.HouseId == houseId).ToListAsync();
         public async Task<House> CreateAsync(House house)
         {
             _context.Houses.Add(house);

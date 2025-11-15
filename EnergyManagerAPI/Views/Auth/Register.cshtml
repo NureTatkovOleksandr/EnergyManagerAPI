@@ -1,0 +1,72 @@
+﻿@using EnergyManagerCore.Models.DTOs
+@model RegisterDto
+@{
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="text-center mb-4">🚀 Почніть економити 20-40%</h2>
+
+            <div id="errorMessage" class="alert alert-danger d-none"></div>
+
+            <form id="registerForm">
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Ім'я</label>
+                    <input asp-for="Username" class="form-control" name="Username" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" name="Email" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Пароль</label>
+                    <input asp-for="Password" type="password" class="form-control" name="Password" required />
+                </div>
+                <button type="submit" class="btn btn-success w-100">Реєстрація Безкоштовно</button>
+            </form>
+
+            <p class="text-center mt-3"><a asp-action="Login">Вже є акаунт? Вхід</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const form = document.getElementById("registerForm");
+        const errorDiv = document.getElementById("errorMessage");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const data = {
+                username: form.Username.value,
+                email: form.Email.value,
+                password: form.Password.value
+            };
+
+            try {
+                const response = await fetch("http://localhost:5274/api/v1/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    // успешная регистрация → редирект на Login
+                    window.location.href = "/Auth/Login";
+                } else {
+                    const text = await response.text();
+                    errorDiv.textContent = text || "Щось пішло не так";
+                    errorDiv.classList.remove("d-none");
+                }
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove("d-none");
+            }
+        });
+    </script>
+}
