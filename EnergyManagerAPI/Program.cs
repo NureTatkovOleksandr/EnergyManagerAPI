@@ -11,9 +11,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================
-// Database
+// Database (PostgreSQL Render)
 // ============================
-string dbPath = Path.Combine(AppContext.BaseDirectory, "EnergyManagerDB.db");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         "Host=dpg-d4ccunf5r7bs73abn46g-a.frankfurt-postgres.render.com;" +
@@ -22,7 +21,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         "Username=energymanagerdb_user;" +
         "Password=pig7w6rgUyjum2SBP9vYslUq1n0T6mM0;" +
         "SslMode=Require"));
-
 
 // ============================
 // DI Services
@@ -47,20 +45,14 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
 
+// ============================
+// Session
+// ============================
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-});
-
-// ============================
-// HttpClient (MVC backend uses API)
-// ============================
-builder.Services.AddHttpClient<MainController>(client =>
-{
-    // ЗДЕСЬ МЕНЯЕМ НА HTTP !!!!
-    client.BaseAddress = new Uri("http://localhost:5033/");
 });
 
 // ============================
@@ -105,7 +97,7 @@ builder.Services.AddCors(options =>
 });
 
 // ============================
-// JWT
+// JWT Authentication
 // ============================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -130,28 +122,41 @@ builder.Services.AddAuthorization();
 // ============================
 var app = builder.Build();
 
-// ❌ Больше никаких HTTPS редиректов
-// app.UseHttpsRedirection();  ← удалено
-
+// ============================
+// Middleware
+// ============================
+app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
+// ============================
+// Swagger UI
+// ============================
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "EnergyManager API v1");
+    c.RoutePrefix = "swagger"; // Swagger будет доступен по /swagger
 });
 
-// Controllers
+// ============================
+// Минимальный маршрут для проверки Render
+// ============================
+app.MapGet("/", () => Results.Ok(new { message = "EnergyManager API is running!" }));
+
+// ============================
+// Controllers и MVC routes
+// ============================
 app.MapControllers();
 
-// MVC routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// ❗ Запуск без https://localhost:5274
-app.Run();   // запускает HTTP сервер
+// ============================
+// Run
+// ============================
+app.Run();
