@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Sqlite;
 namespace EnergyManagerCore.Data
 {
     using EnergyManagerCore.Models;
@@ -27,7 +26,18 @@ namespace EnergyManagerCore.Data
         {
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseSqlite("Data Source=EnergyManagerDB.db");
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseNpgsql(
+                    "Host=dpg-d4ccunf5r7bs73abn46g-a.frankfurt-postgres.render.com;" +
+                    "Port=5432;" +
+                    "Database=energymanagerdb;" +
+                    "Username=energymanagerdb_user;" +
+                    "Password=pig7w6rgUyjum2SBP9vYslUq1n0T6mM0;" +
+                    "SslMode=Require");
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

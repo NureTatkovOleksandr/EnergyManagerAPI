@@ -15,7 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================
 string dbPath = Path.Combine(AppContext.BaseDirectory, "EnergyManagerDB.db");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
+    options.UseNpgsql(
+        "Host=dpg-d4ccunf5r7bs73abn46g-a.frankfurt-postgres.render.com;" +
+        "Port=5432;" +
+        "Database=energymanagerdb;" +
+        "Username=energymanagerdb_user;" +
+        "Password=pig7w6rgUyjum2SBP9vYslUq1n0T6mM0;" +
+        "SslMode=Require"));
+
 
 // ============================
 // DI Services
