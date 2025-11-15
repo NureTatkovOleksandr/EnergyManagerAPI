@@ -20,8 +20,8 @@ namespace EnergyManagerCore.Models
 
         [MaxLength(10), Column(TypeName = "TEXT")]
         public string Role { get; set; } = "user";
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation: Один User → Багато Houses
         public virtual ICollection<House>? Houses { get; set; }

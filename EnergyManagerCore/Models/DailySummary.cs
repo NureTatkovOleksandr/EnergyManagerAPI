@@ -17,7 +17,7 @@ namespace EnergyManagerCore.Models
 
         public double Savings { get; set; } = 0;  // грн
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
         public virtual House? House { get; set; }

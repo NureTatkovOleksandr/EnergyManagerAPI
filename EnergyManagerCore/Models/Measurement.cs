@@ -9,7 +9,7 @@ namespace EnergyManagerCore.Models
 
         public int DeviceId { get; set; }  
 
-        public DateTime Timestamp { get; set; } = DateTime.Now;
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         public double Value { get; set; }
 

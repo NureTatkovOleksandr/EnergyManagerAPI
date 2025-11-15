@@ -52,7 +52,7 @@ namespace EnergyManagerCore.Repositories
             existing.Email = user.Email;
             // PasswordHash - НЕ оновлюємо тут (AuthService)
             existing.Role = user.Role;
-            existing.UpdatedAt = DateTime.Now;
+            existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return existing;

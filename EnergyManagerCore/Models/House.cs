@@ -18,7 +18,7 @@ namespace EnergyManagerCore.Models
 
         public double? TotalArea { get; set; }  // м²
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
         public virtual User? User { get; set; }
