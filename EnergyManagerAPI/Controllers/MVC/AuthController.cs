@@ -11,7 +11,7 @@ namespace EnergyManagerWeb.Controllers.MVC
         public AuthController(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient();
-            _httpClient.BaseAddress = new Uri("http://localhost:5274/api/v1/"); // URL твоего API
+            _httpClient.BaseAddress = new Uri("https://energymanagerapi.onrender.com/api/v1/"); // URL твоего API
         }
 
         [HttpGet]
