@@ -6,13 +6,15 @@
 
 <div class="container mt-4">
     <h1 class="mb-4">Energy Manager Dashboard</h1>
+
+    <div class="alert alert-info mt-3">
+        👤 Logged in as: <strong id="userName">Loading...</strong> (ID: @Model.UserId)
+    </div>
+
     <div class="row">
         <div class="col-md-8">
             <h2>My Houses</h2>
             <ul id="housesList" class="list-group"></ul>
-        </div>
-        <div class="alert alert-info mt-3">
-            👤 Logged in as: <strong id="userName">Loading...</strong> (ID: @Model.UserId)
         </div>
         <div class="col-md-4">
             <h2>Recommendations</h2>
@@ -26,50 +28,56 @@
 <script>
     const API = "https://energymanagerapi.onrender.com/api/v1";
     const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
+    const token = sessionStorage.getItem("jwt");
 
-    console.log("Dashboard script loaded OK, userId =", userId);
+    console.log("Dashboard loaded. userId =", userId);
 
-    // 1. Загрузить имя пользователя сверху
-    loadUserInfo();
-
-    function loadUserInfo() {
-        const token = sessionStorage.getItem("jwt");
-        if (!token) {
-            document.getElementById("userName").textContent = "NO TOKEN!";
-            return;
-        }
-
-        fetch(`https://energymanagerapi.onrender.com/Auth/me`, {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        })
-        .then(res => res.json())
-        .then(user => {
-            document.getElementById("userName").textContent = user.email;
-            console.log("User loaded:", user);
-        })
-        .catch(err => console.error("Auth/me error:", err));
+    if (!token) {
+        console.warn("NO JWT TOKEN!");
     }
 
-    // 2. Загрузить дома
+    // ======================
+    // Загружаем данные юзера
+    // ======================
+    loadUserName();
+    function loadUserName() {
+        // данные о пользователе ты уже получаешь на бэкенде!
+        // здесь просто выводим ID
+        document.getElementById("userName").textContent = "User #" + userId;
+    }
+
+    // ======================
+    // Загружаем дома
+    // ======================
     loadHouses();
 
     function loadHouses() {
         console.log("Fetching houses for userId:", userId);
 
-        fetch(`${API}/House/houses?usrid=${userId}`)
-            .then(res => res.json())
-            .then(houses => {
-                console.log("Houses loaded:", houses);
-                renderHouses(houses);
-            })
-            .catch(err => console.error("Error loading houses:", err));
+        fetch(`${API}/House/houses?usrid=${userId}`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => {
+            console.log("Houses response status:", res.status);
+            return res.json();
+        })
+        .then(houses => {
+            console.log("Houses loaded:", houses);
+            renderHouses(houses);
+        })
+        .catch(err => console.error("Error loading houses:", err));
     }
 
     function renderHouses(houses) {
         const list = document.getElementById("housesList");
         list.innerHTML = "";
+
+        if (!houses.length) {
+            list.innerHTML = `<li class="list-group-item text-danger">No houses found</li>`;
+            return;
+        }
 
         houses.forEach(house => {
             const li = document.createElement("li");
@@ -89,10 +97,14 @@
     }
 
     function loadDevices(houseId) {
-        fetch(`${API}/Device/${houseId}`)
-            .then(res => res.json())
-            .then(devices => renderDevices(houseId, devices))
-            .catch(err => console.error("Error loading devices:", err));
+        fetch(`${API}/Device/${houseId}`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => res.json())
+        .then(devices => renderDevices(houseId, devices))
+        .catch(err => console.error("Error loading devices:", err));
     }
 
     function renderDevices(houseId, devices) {
@@ -115,18 +127,21 @@
     }
 
     function loadTotalMeasurement(deviceId) {
-        fetch(`${API}/Device/${deviceId}/total`)
-            .then(res => {
-                if (!res.ok) return 0;
-                return res.json();
-            })
-            .then(total => {
-                document.getElementById(`total-${deviceId}`).textContent = total;
-            })
-            .catch(err => {
-                console.error("Error loading total measurement:", err);
-                document.getElementById(`total-${deviceId}`).textContent = "ERR";
-            });
+        fetch(`${API}/Device/${deviceId}/total`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => {
+            if (!res.ok) return 0;
+            return res.json();
+        })
+        .then(total => {
+            document.getElementById(`total-${deviceId}`).textContent = total;
+        })
+        .catch(err => {
+            console.error("Error loading total measurement:", err);
+            document.getElementById(`total-${deviceId}`).textContent = "ERR";
+        });
     }
 </script>
-
