@@ -1,4 +1,4 @@
-@EnergyManagerAPI_HostAddress = http://localhost:5274
+@EnergyManagerAPI_HostAddress = https://energymanagerapi.onrender.com/
 
 GET {{EnergyManagerAPI_HostAddress}}/weatherforecast/
 Accept: application/json
