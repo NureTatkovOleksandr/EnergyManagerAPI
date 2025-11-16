@@ -55,13 +55,24 @@ namespace EnergyManagerCore.Services
         {
             var device = await _repo.GetByIdAsync(id);
             if (device == null) return null;
-            return new DeviceDto { /* map */ };
+
+            return new DeviceDto
+            {
+                Id = device.Id,
+                HouseId = device.HouseId,
+                Name = device.Name,
+                Type = device.Type,
+                Identifier = device.Identifier,
+                IsActive = device.IsActive
+            };
         }
+
 
         public async Task<DeviceDto> CreateAsync(CreateDeviceDto dto, int houseId, int userId)
         {
             var house = await _houseService.GetByIdAsync(houseId, userId);
             if (house == null) throw new UnauthorizedAccessException();
+
             var device = new Device
             {
                 HouseId = houseId,
@@ -70,9 +81,20 @@ namespace EnergyManagerCore.Services
                 Identifier = dto.Identifier,
                 IsActive = dto.IsActive
             };
+
             var created = await _repo.CreateAsync(device);
-            return new DeviceDto { /* map */ };
+
+            return new DeviceDto
+            {
+                Id = created.Id,
+                HouseId = created.HouseId,
+                Name = created.Name,
+                Type = created.Type,
+                Identifier = created.Identifier,
+                IsActive = created.IsActive
+            };
         }
+
 
         // Update/Delete аналогічно (check ownership)
         public async Task<DeviceDto?> UpdateAsync(int id, DeviceDto dto, int userId)
