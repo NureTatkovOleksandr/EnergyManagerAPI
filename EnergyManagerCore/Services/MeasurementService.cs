@@ -56,7 +56,7 @@ namespace EnergyManagerCore.Services
         public async Task<MeasurementDto> CreateAsync(CreateMeasurementDto dto, int deviceId)
         {
             var device = await _deviceService.GetByIdAsync(deviceId);
-            if (device == null) throw new UnauthorizedAccessException();
+            if (device == null) throw new NullReferenceException("Device is null.");
             var measurement = new Measurement
             {
                 DeviceId = deviceId,

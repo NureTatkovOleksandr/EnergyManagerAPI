@@ -70,5 +70,6 @@ namespace EnergyManagerAPI.Controllers
             var deleted = await _service.DeleteAsync(id, userId);
             return deleted ? NoContent() : NotFound();
         }
+
     }
 }

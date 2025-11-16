@@ -53,5 +53,38 @@ namespace EnergyManagerAPI.Controllers
             var deleted = await _service.DeleteAsync(id, userId);
             return deleted ? NoContent() : NotFound();
         }
+
+        [HttpGet("{deviceId:int}/measurements")]
+        public async Task<IActionResult> GetMeasurements(int deviceId)
+        {
+            var userId = User.GetUserId();
+
+            var measurements = await _service.GetMeasurementsByDeviceIdAsync(deviceId, userId);
+
+            // Якщо пристрій не знайдено або не належить користувачу — 404
+            if (measurements == null)
+                return NotFound();
+
+            return Ok(measurements);
+        }
+
+        /// <summary>
+        /// Повертає суму всіх значень value (як int) для вказаного пристрою
+        /// GET api/v1/device/{deviceId}/total
+        /// </summary>
+        [HttpGet("{deviceId:int}/total")]
+        public async Task<IActionResult> GetTotalMeasurement(int deviceId)
+        {
+            var userId = User.GetUserId();
+
+            var total = await _service.GetTotalMeasurementValueAsync(deviceId, userId);
+
+            // Якщо пристрій не існує або не належить користувачу — 404
+            // Якщо вимірювань немає — сервіс поверне 0.0, тому просто кастимо до int
+            if (total == null)
+                return NotFound();
+
+            return Ok((int)Math.Round(total.Value)); // округлення до цілого, як просили int
+        }
     }
 }

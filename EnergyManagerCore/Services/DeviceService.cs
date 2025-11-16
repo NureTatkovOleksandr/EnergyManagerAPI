@@ -12,6 +12,9 @@ namespace EnergyManagerCore.Services
     // Services/IDeviceService.cs
     public interface IDeviceService
     {
+        // В інтерфейсі IDeviceService
+        Task<List<MeasurementDto>?> GetMeasurementsByDeviceIdAsync(int deviceId, int userId);
+        Task<double?> GetTotalMeasurementValueAsync(int deviceId, int userId);
         Task<IEnumerable<DeviceDto>> GetByHouseIdAsync(int houseId, int userId);
         Task<DeviceDto?> GetByIdAsync(int id);
         Task<DeviceDto> CreateAsync(CreateDeviceDto dto, int houseId, int userId);
@@ -24,11 +27,12 @@ namespace EnergyManagerCore.Services
     {
         private readonly IDeviceRepository _repo;
         private readonly IHouseService _houseService;  // Check ownership
-
-        public DeviceService(IDeviceRepository repo, IHouseService houseService)
+        private readonly IMeasurementRepository _measurementRepository;
+        public DeviceService(IDeviceRepository repo, IHouseService houseService, IMeasurementRepository measurementRepository)
         {
             _repo = repo;
             _houseService = houseService;
+            _measurementRepository = measurementRepository;
         }
 
         public async Task<IEnumerable<DeviceDto>> GetByHouseIdAsync(int houseId, int userId)
@@ -102,6 +106,47 @@ namespace EnergyManagerCore.Services
 
             return await _repo.DeleteAsync(id);
         }
+        // В DeviceService (приклад реалізації в сервісі)
+        // DeviceService.cs (додай/заміни ці методи)
 
+        public async Task<List<MeasurementDto>?> GetMeasurementsByDeviceIdAsync(int deviceId, int userId)
+        {
+            // Перевіряємо, чи пристрій існує і належить користувачу
+            var device = await _repo.GetByIdAsync(deviceId);
+            if (device == null || device.House?.UserId != userId)
+                return null;
+
+            // Отримуємо ентіті Measurement з репозиторію
+            var entities = await _measurementRepository.GetByDeviceIdAsync(deviceId);
+
+            // Мапимо на DTO (вручну – найпростіше для тестового проекту)
+            var dtos = entities.Select(m => new MeasurementDto
+            {
+                Id = m.Id,
+                DeviceId = m.DeviceId,
+                Timestamp = m.Timestamp,
+                Value = m.Value,
+                Unit = m.Unit
+            }).OrderByDescending(x => x.Timestamp) // зручно для фронту
+              .ToList();
+
+            return dtos;
+        }
+
+        public async Task<double?> GetTotalMeasurementValueAsync(int deviceId, int userId)
+        {
+            var device = await _repo.GetByIdAsync(deviceId);
+            if (device == null || device.House?.UserId != userId)
+                return null;
+
+            var entities = await _measurementRepository.GetByDeviceIdAsync(deviceId);
+
+            // Якщо вимірювань немає – повертаємо 0.0 (не null)
+            if (!entities.Any())
+                return 0.0;
+
+            // Просто сумуємо Value (як просив – без урахування unit, бо це тестовий проект)
+            return entities.Sum(m => m.Value);
+        }
     }
 }
