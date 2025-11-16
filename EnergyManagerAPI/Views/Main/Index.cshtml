@@ -23,7 +23,7 @@
 @section Scripts {
     <script>
         const API = "https://energymanagerapi.onrender.com/api/v1";
-        const userId = @Model.UserId;
+        const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
         console.log("Dashboard script loaded OK");
         // Загружаем дома пользователя
         loadHouses();
