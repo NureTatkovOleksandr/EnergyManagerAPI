@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EnergyManagerCore.Models;
+using EnergyManagerCore.Models.DTOs;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
 
 namespace EnergyManagerWeb.Controllers.MVC
@@ -26,15 +28,20 @@ namespace EnergyManagerWeb.Controllers.MVC
             var response = await _httpClient.GetAsync("https://energymanagerapi.onrender.com/api/v1/main");
             if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Content = "⛔ Доступ заборонено";
-            }
-            else
-            {
-                ViewBag.Content = await response.Content.ReadAsStringAsync();
+                return View(new DashboardViewModel { UserId = 0 }); // или бросать ошибку
             }
 
-            return View();
+            var json = await response.Content.ReadAsStringAsync();
+            var user = System.Text.Json.JsonSerializer.Deserialize<UserDto>(json); // DTO с Id
+
+            var vm = new DashboardViewModel
+            {
+                UserId = user.Id
+            };
+
+            return View(vm);
         }
+
     }
 }
 
