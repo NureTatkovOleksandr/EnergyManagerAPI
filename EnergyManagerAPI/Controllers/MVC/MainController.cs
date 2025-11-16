@@ -17,13 +17,13 @@ namespace EnergyManagerWeb.Controllers.MVC
             var token = HttpContext.Session.GetString("jwt");
             if (string.IsNullOrEmpty(token))
             {
-                return Redirect("http://localhost:5274/Auth/Login");
+                return Redirect("https://energymanagerapi.onrender.com/Auth/Login");
             }
 
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.GetAsync("http://localhost:5274/api/v1/main");
+            var response = await _httpClient.GetAsync("https://energymanagerapi.onrender.com/api/v1/main");
             if (!response.IsSuccessStatusCode)
             {
                 ViewBag.Content = "⛔ Доступ заборонено";
