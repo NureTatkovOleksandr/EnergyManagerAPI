@@ -30,6 +30,8 @@
 
 @section Scripts {
     <script>
+        const API_URL = "https://energymanagerapi.onrender.com"; // локальная переменная
+
         const form = document.getElementById("loginForm");
         const errorDiv = document.getElementById("errorMessage");
 
@@ -42,7 +44,7 @@
             };
 
             try {
-                const response = await fetch("/Auth/Login", {
+                const response = await fetch(`${API_URL}/Auth/Login`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
