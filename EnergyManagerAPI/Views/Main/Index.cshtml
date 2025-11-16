@@ -1,7 +1,7 @@
 ﻿@model EnergyManagerCore.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    Layout = "_Layout";
+
 }
 
 <div class="container mt-4">
@@ -10,6 +10,9 @@
         <div class="col-md-8">
             <h2>My Houses</h2>
             <ul id="housesList" class="list-group"></ul>
+        </div>
+        <div class="alert alert-info mt-3">
+            👤 Logged in as: <strong id="userName">Loading...</strong> (ID: @Model.UserId)
         </div>
         <div class="col-md-4">
             <h2>Recommendations</h2>
@@ -20,81 +23,110 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        const API = "https://energymanagerapi.onrender.com/api/v1";
-        const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
-        console.log("Dashboard script loaded OK");
-        // Загружаем дома пользователя
-        loadHouses();
+<script>
+    const API = "https://energymanagerapi.onrender.com/api/v1";
+    const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
 
-        function loadHouses() {
-            fetch(`${API}/House/houses?usrid=${userId}`)
-                .then(res => res.json())
-                .then(houses => renderHouses(houses))
-                .catch(err => console.error("Error loading houses:", err));
+    console.log("Dashboard script loaded OK, userId =", userId);
+
+    // 1. Загрузить имя пользователя сверху
+    loadUserInfo();
+
+    function loadUserInfo() {
+        const token = sessionStorage.getItem("jwt");
+        if (!token) {
+            document.getElementById("userName").textContent = "NO TOKEN!";
+            return;
         }
 
-        function renderHouses(houses) {
-            const list = document.getElementById("housesList");
-            list.innerHTML = "";
+        fetch(`https://energymanagerapi.onrender.com/Auth/me`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => res.json())
+        .then(user => {
+            document.getElementById("userName").textContent = user.email;
+            console.log("User loaded:", user);
+        })
+        .catch(err => console.error("Auth/me error:", err));
+    }
 
-            houses.forEach(house => {
-                const li = document.createElement("li");
-                li.className = "list-group-item";
+    // 2. Загрузить дома
+    loadHouses();
 
-                li.innerHTML = `
-                    <div class="d-flex justify-content-between">
-                        <strong>${house.name}</strong>
-                    </div>
-                    <ul id="devices-${house.id}" class="list-group mt-2"></ul>
-                `;
+    function loadHouses() {
+        console.log("Fetching houses for userId:", userId);
 
-                list.appendChild(li);
+        fetch(`${API}/House/houses?usrid=${userId}`)
+            .then(res => res.json())
+            .then(houses => {
+                console.log("Houses loaded:", houses);
+                renderHouses(houses);
+            })
+            .catch(err => console.error("Error loading houses:", err));
+    }
 
-                loadDevices(house.id); // Загрузить девайсы дома
+    function renderHouses(houses) {
+        const list = document.getElementById("housesList");
+        list.innerHTML = "";
+
+        houses.forEach(house => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+
+            li.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${house.name}</strong>
+                </div>
+                <ul id="devices-${house.id}" class="list-group mt-2"></ul>
+            `;
+
+            list.appendChild(li);
+
+            loadDevices(house.id);
+        });
+    }
+
+    function loadDevices(houseId) {
+        fetch(`${API}/Device/${houseId}`)
+            .then(res => res.json())
+            .then(devices => renderDevices(houseId, devices))
+            .catch(err => console.error("Error loading devices:", err));
+    }
+
+    function renderDevices(houseId, devices) {
+        const ul = document.getElementById(`devices-${houseId}`);
+        ul.innerHTML = "";
+
+        devices.forEach(dev => {
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+
+            li.innerHTML = `
+                <span>${dev.name} <small class="text-muted">(${dev.type})</small></span>
+                <span id="total-${dev.id}" style="color:red; font-weight:bold;">Loading...</span>
+            `;
+
+            ul.appendChild(li);
+
+            loadTotalMeasurement(dev.id);
+        });
+    }
+
+    function loadTotalMeasurement(deviceId) {
+        fetch(`${API}/Device/${deviceId}/total`)
+            .then(res => {
+                if (!res.ok) return 0;
+                return res.json();
+            })
+            .then(total => {
+                document.getElementById(`total-${deviceId}`).textContent = total;
+            })
+            .catch(err => {
+                console.error("Error loading total measurement:", err);
+                document.getElementById(`total-${deviceId}`).textContent = "ERR";
             });
-        }
+    }
+</script>
 
-        function loadDevices(houseId) {
-            fetch(`${API}/Device/${houseId}`)
-                .then(res => res.json())
-                .then(devices => renderDevices(houseId, devices))
-                .catch(err => console.error("Error loading devices:", err));
-        }
-
-        function renderDevices(houseId, devices) {
-            const ul = document.getElementById(`devices-${houseId}`);
-            ul.innerHTML = "";
-
-            devices.forEach(dev => {
-                const li = document.createElement("li");
-                li.className = "list-group-item d-flex justify-content-between align-items-center";
-
-                li.innerHTML = `
-                    <span>${dev.name} <small class="text-muted">(${dev.type})</small></span>
-                    <span id="total-${dev.id}" style="color:red; font-weight:bold;">Loading...</span>
-                `;
-
-                ul.appendChild(li);
-
-                loadTotalMeasurement(dev.id);
-            });
-        }
-
-        function loadTotalMeasurement(deviceId) {
-            fetch(`${API}/Device/${deviceId}/total`)
-                .then(res => {
-                    if (!res.ok) return 0; // Если нет измерений
-                    return res.json();
-                })
-                .then(total => {
-                    document.getElementById(`total-${deviceId}`).textContent = total;
-                })
-                .catch(err => {
-                    console.error("Error loading total measurement:", err);
-                    document.getElementById(`total-${deviceId}`).textContent = "ERR";
-                });
-        }
-    </script>
-}
