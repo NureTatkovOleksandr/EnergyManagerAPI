@@ -57,6 +57,7 @@ namespace EnergyManagerCore.Services
         {
             var device = await _deviceService.GetByIdAsync(deviceId);
             if (device == null) throw new NullReferenceException("Device is null.");
+
             var measurement = new Measurement
             {
                 DeviceId = deviceId,
@@ -64,10 +65,19 @@ namespace EnergyManagerCore.Services
                 Value = dto.Value,
                 Unit = dto.Unit
             };
-            var created = await _repo.CreateAsync(measurement);
-            return new MeasurementDto { /* map */ };
 
+            var created = await _repo.CreateAsync(measurement);
+
+            return new MeasurementDto
+            {
+                Id = created.Id,
+                DeviceId = created.DeviceId,
+                Timestamp = created.Timestamp,
+                Value = created.Value,
+                Unit = created.Unit
+            };
         }
+
 
         public async Task<MeasurementDto?> UpdateAsync(long id, MeasurementDto dto, int userId)
         {
