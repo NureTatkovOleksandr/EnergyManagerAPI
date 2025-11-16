@@ -21,51 +21,79 @@
 
 @section Scripts {
     <script>
-        var userId = @Model.UserId;
+        const API = "https://energymanagerapi.onrender.com/api/v1";
+        const userId = @Model.UserId;
 
-        // MF-1: Fetch and display houses with consumption
-        fetch(`http://localhost:5274/api/v1/House/houses?usrid=${userId}`)
-            .then(response => response.json())
-            .then(houses => {
-                const housesList = document.getElementById('housesList');
+        // Загружаем дома пользователя
+        loadHouses();
 
-                houses.forEach(house => {
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                    li.innerHTML = `
-                        <span><strong>${house.name}</strong></span>
-                        <span id="consumption-${house.id}">(Loading...)</span> kWh
-                    `;
-                    housesList.appendChild(li);
+        function loadHouses() {
+            fetch(`${API}/House/houses?usrid=${userId}`)
+                .then(res => res.json())
+                .then(houses => renderHouses(houses))
+                .catch(err => console.error("Error loading houses:", err));
+        }
 
-                    // Fetch measurements for each house
-                    fetch(`http://localhost:5274/api/v1/House/measurements?houseId=${house.id}`)
-                        .then(res => res.json())
-                        .then(measurements => {
-                            let totalConsumption = 0;
-                            measurements.forEach(m => {
-                                if (m.unit === 'kWh') totalConsumption += m.value;
-                            });
-                            document.getElementById(`consumption-${house.id}`).textContent = totalConsumption.toFixed(2);
-                        })
-                        .catch(error => {
-                            document.getElementById(`consumption-${house.id}`).textContent = 'Error';
-                            console.error('Error fetching measurements:', error);
-                        });
+        function renderHouses(houses) {
+            const list = document.getElementById("housesList");
+            list.innerHTML = "";
+
+            houses.forEach(house => {
+                const li = document.createElement("li");
+                li.className = "list-group-item";
+
+                li.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <strong>${house.name}</strong>
+                    </div>
+                    <ul id="devices-${house.id}" class="list-group mt-2"></ul>
+                `;
+
+                list.appendChild(li);
+
+                loadDevices(house.id); // Загрузить девайсы дома
+            });
+        }
+
+        function loadDevices(houseId) {
+            fetch(`${API}/Device/${houseId}`)
+                .then(res => res.json())
+                .then(devices => renderDevices(houseId, devices))
+                .catch(err => console.error("Error loading devices:", err));
+        }
+
+        function renderDevices(houseId, devices) {
+            const ul = document.getElementById(`devices-${houseId}`);
+            ul.innerHTML = "";
+
+            devices.forEach(dev => {
+                const li = document.createElement("li");
+                li.className = "list-group-item d-flex justify-content-between align-items-center";
+
+                li.innerHTML = `
+                    <span>${dev.name} <small class="text-muted">(${dev.type})</small></span>
+                    <span id="total-${dev.id}" style="color:red; font-weight:bold;">Loading...</span>
+                `;
+
+                ul.appendChild(li);
+
+                loadTotalMeasurement(dev.id);
+            });
+        }
+
+        function loadTotalMeasurement(deviceId) {
+            fetch(`${API}/Device/${deviceId}/total`)
+                .then(res => {
+                    if (!res.ok) return 0; // Если нет измерений
+                    return res.json();
+                })
+                .then(total => {
+                    document.getElementById(`total-${deviceId}`).textContent = total;
+                })
+                .catch(err => {
+                    console.error("Error loading total measurement:", err);
+                    document.getElementById(`total-${deviceId}`).textContent = "ERR";
                 });
-            })
-            .catch(error => console.error('Error fetching houses:', error));
-
-        // MF-2: remove broken fetch — houseId undefined
-        // TODO: you need to decide which house to load scenarios for
-
-        document.getElementById('autoOptimize').addEventListener('click', () => {
-            console.log('Auto optimization triggered (not implemented)');
-        });
-
-        document.getElementById('generateReport').addEventListener('click', () => {
-            console.log('Report generation triggered (not implemented)');
-        });
+        }
     </script>
-
 }
