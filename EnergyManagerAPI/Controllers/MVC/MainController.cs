@@ -28,7 +28,7 @@ namespace EnergyManagerWeb.Controllers.MVC
             var response = await _httpClient.GetAsync("https://energymanagerapi.onrender.com/api/v1/main");
             if (!response.IsSuccessStatusCode)
             {
-                return View(new DashboardViewModel { UserId = 0 }); // или бросать ошибку
+                throw new Exception("Respone is not OK") ; // или бросать ошибку
             }
 
             var json = await response.Content.ReadAsStringAsync();
