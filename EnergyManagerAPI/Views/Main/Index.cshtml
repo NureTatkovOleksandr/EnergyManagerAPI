@@ -3,18 +3,40 @@
     ViewData["Title"] = "Dashboard";
     Layout = "_Layout";
 }
-
 <div class="container mt-4">
     <h1 class="mb-4">Energy Manager Dashboard</h1>
-
     <div class="alert alert-info mt-3">
-        👤 Logged in as: <strong id="userName">Loading...</strong> (ID: @Model.UserId)
+        👤 Logged in as: <strong>@Model.UserName</strong> (ID: @Model.UserId)
     </div>
-
     <div class="row">
         <div class="col-md-8">
             <h2>My Houses</h2>
-            <ul id="housesList" class="list-group"></ul>
+            <ul id="housesList" class="list-group">
+                @if (!Model.Houses.Any())
+                {
+                    <li class="list-group-item text-danger">No houses found</li>
+                }
+                else
+                {
+                    @foreach (var house in Model.Houses)
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>@house.Name</strong>
+                            </div>
+                            <ul class="list-group mt-2">
+                                @foreach (var device in house.Devices)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>@device.Name <small class="text-muted">(@device.Type)</small></span>
+                                        <span style="color:red; font-weight:bold;">@device.TotalMeasurement</span>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                }
+            </ul>
         </div>
         <div class="col-md-4">
             <h2>Recommendations</h2>
@@ -29,119 +51,10 @@
     const API = "https://energymanagerapi.onrender.com/api/v1";
     const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
     const token = sessionStorage.getItem("jwt");
-
     console.log("Dashboard loaded. userId =", userId);
-
     if (!token) {
         console.warn("NO JWT TOKEN!");
     }
-
-    // ======================
-    // Загружаем данные юзера
-    // ======================
-    loadUserName();
-    function loadUserName() {
-        // данные о пользователе ты уже получаешь на бэкенде!
-        // здесь просто выводим ID
-        document.getElementById("userName").textContent = "User #" + userId;
-    }
-
-    // ======================
-    // Загружаем дома
-    // ======================
-    loadHouses();
-
-    function loadHouses() {
-        console.log("Fetching houses for userId:", userId);
-
-        fetch(`${API}/House/houses?usrid=${userId}`, {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        })
-        .then(res => {
-            console.log("Houses response status:", res.status);
-            return res.json();
-        })
-        .then(houses => {
-            console.log("Houses loaded:", houses);
-            renderHouses(houses);
-        })
-        .catch(err => console.error("Error loading houses:", err));
-    }
-
-    function renderHouses(houses) {
-        const list = document.getElementById("housesList");
-        list.innerHTML = "";
-
-        if (!houses.length) {
-            list.innerHTML = `<li class="list-group-item text-danger">No houses found</li>`;
-            return;
-        }
-
-        houses.forEach(house => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-
-            li.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <strong>${house.name}</strong>
-                </div>
-                <ul id="devices-${house.id}" class="list-group mt-2"></ul>
-            `;
-
-            list.appendChild(li);
-
-            loadDevices(house.id);
-        });
-    }
-
-    function loadDevices(houseId) {
-        fetch(`${API}/Device/${houseId}`, {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        })
-        .then(res => res.json())
-        .then(devices => renderDevices(houseId, devices))
-        .catch(err => console.error("Error loading devices:", err));
-    }
-
-    function renderDevices(houseId, devices) {
-        const ul = document.getElementById(`devices-${houseId}`);
-        ul.innerHTML = "";
-
-        devices.forEach(dev => {
-            const li = document.createElement("li");
-            li.className = "list-group-item d-flex justify-content-between align-items-center";
-
-            li.innerHTML = `
-                <span>${dev.name} <small class="text-muted">(${dev.type})</small></span>
-                <span id="total-${dev.id}" style="color:red; font-weight:bold;">Loading...</span>
-            `;
-
-            ul.appendChild(li);
-
-            loadTotalMeasurement(dev.id);
-        });
-    }
-
-    function loadTotalMeasurement(deviceId) {
-        fetch(`${API}/Device/${deviceId}/total`, {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        })
-        .then(res => {
-            if (!res.ok) return 0;
-            return res.json();
-        })
-        .then(total => {
-            document.getElementById(`total-${deviceId}`).textContent = total;
-        })
-        .catch(err => {
-            console.error("Error loading total measurement:", err);
-            document.getElementById(`total-${deviceId}`).textContent = "ERR";
-        });
-    }
+    // Убрана логика загрузки домов/устройств — теперь данные рендерятся на сервере
+    // Если нужно добавить JS для кнопок (autoOptimize, generateReport), реализуй здесь
 </script>

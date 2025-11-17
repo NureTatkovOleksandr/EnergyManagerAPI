@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using EnergyManagerCore.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace EnergyManagerWeb.Controllers
 {
@@ -9,15 +11,24 @@ namespace EnergyManagerWeb.Controllers
     public class MainController : ControllerBase
     {
         [HttpGet]
+
         public IActionResult GetProtectedData()
         {
-            // Тут ты можешь вернуть любую полезную информацию.
-            // Пока просто тестовый пример.
+        // Пытаемся достать юзера из сессии
+            var userJson = HttpContext.Session.GetString("user");
+
+            if (string.IsNullOrEmpty(userJson))
+            {
+                return Unauthorized(new { message = "❌ Сессия пуста или пользователь не авторизован." });
+            }
+
+            var user = JsonSerializer.Deserialize<UserDto>(userJson);
+
             var data = new
             {
                 message = "✅ Доступ дозволено! Це приватні дані лише для авторизованих користувачів.",
                 timestamp = DateTime.UtcNow,
-                user = User.Identity?.Name ?? "невідомий користувач"
+                user
             };
 
             return Ok(data);

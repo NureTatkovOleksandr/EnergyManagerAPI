@@ -14,6 +14,8 @@ namespace EnergyManagerCore.Models.DTOs
         public string Type { get; set; } = "";  // 'electricity_meter', ...
         public string Identifier { get; set; } = "";
         public bool IsActive { get; set; } = true;
+        public double TotalMeasurement { get; set; } = 0;
+
     }
 
     public class CreateDeviceDto

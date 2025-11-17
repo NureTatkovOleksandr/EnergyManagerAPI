@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EnergyManagerAPI.Controllers
 {
@@ -25,7 +26,26 @@ namespace EnergyManagerAPI.Controllers
             var user = await _service.GetByIdAsync(id);
             return user != null ? Ok(user) : NotFound();
         }
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            // Достаём userId из токена (обычно claim "sub" или "id")
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                              ?? User.FindFirst("sub")?.Value;
 
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("JWT не содержит идентификатор пользователя.");
+
+            if (!int.TryParse(userIdClaim, out var userId))
+                return BadRequest("Некорректный идентификатор пользователя в токене.");
+
+            // Получаем данные из сервиса
+            var user = await _service.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound("Пользователь не найден.");
+
+            return Ok(user);
+        }
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
