@@ -58,7 +58,7 @@ namespace EnergyManagerWeb.Controllers.MVC
             // Для каждого дома загружаем устройства и их total measurements
             foreach (var house in houses)
             {
-                var devicesResponse = await _httpClient.GetAsync($"https://energymanagerapi.onrender.com/api/v1/Device/{house.Id}");
+                var devicesResponse = await _httpClient.GetAsync($"https://energymanagerapi.onrender.com/api/v1/Device/byhouse/{house.Id}");
                 if (!devicesResponse.IsSuccessStatusCode)
                 {
                     house.Devices = new List<DeviceDto>();

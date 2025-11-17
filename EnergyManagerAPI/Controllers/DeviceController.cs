@@ -15,7 +15,7 @@ namespace EnergyManagerAPI.Controllers
 
         public DeviceController(IDeviceService service) => _service = service;
 
-        [HttpGet("{houseId}")]
+        [HttpGet("/byhouse/{houseId}")]
         public async Task<IActionResult> GetByHouseId(int houseId)
         {
             var userId = User.GetUserId();  // Extension
