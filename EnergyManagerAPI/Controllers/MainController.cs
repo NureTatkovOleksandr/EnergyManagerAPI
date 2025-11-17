@@ -1,4 +1,6 @@
-﻿using EnergyManagerCore.Models.DTOs;
+﻿using EnergyManagerCore.Extentions; // Для User.GetUserId() и других extensions
+using EnergyManagerCore.Models.DTOs;
+using EnergyManagerCore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -10,19 +12,25 @@ namespace EnergyManagerWeb.Controllers
     [Authorize] // Требует JWT-токен в заголовке Authorization: Bearer <token>
     public class MainController : ControllerBase
     {
-        [HttpGet]
-
-        public IActionResult GetProtectedData()
+        // Внедрите сервис, если нужно (например, IUserService для получения user по ID)
+        private readonly IUserService _userService; // Если у вас есть сервис для users
+        public MainController(IUserService userService)
         {
-        // Пытаемся достать юзера из сессии
-            var userJson = HttpContext.Session.GetString("user");
+            _userService = userService;
+        }
 
-            if (string.IsNullOrEmpty(userJson))
+        [HttpGet]
+        public async Task<IActionResult> GetProtectedData() // Сделайте async, если нужно ждать сервис
+        {
+            // Извлекаем user ID из JWT claims (не из сессии!)
+            var userId = User.GetUserId(); // Ваш extension
+
+            // Получаем user из БД или сервиса (не храните в сессии)
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
             {
-                return Unauthorized(new { message = "❌ Сессия пуста или пользователь не авторизован." });
+                return Unauthorized(new { message = "❌ Пользователь не найден или не авторизован." });
             }
-
-            var user = JsonSerializer.Deserialize<UserDto>(userJson);
 
             var data = new
             {
@@ -30,7 +38,6 @@ namespace EnergyManagerWeb.Controllers
                 timestamp = DateTime.UtcNow,
                 user
             };
-
             return Ok(data);
         }
     }
