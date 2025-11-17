@@ -28,23 +28,21 @@
     </div>
 </div>
 
+
 @section Scripts {
     <script>
-        const API_URL = "https://energymanagerapi.onrender.com"; // локальная переменная
-
         const form = document.getElementById("loginForm");
         const errorDiv = document.getElementById("errorMessage");
-
+        const API_URL = "https://energymanagerapi.onrender.com";
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
-
             const data = {
                 Email: form.Email.value,
                 Password: form.Password.value
             };
 
             try {
-                const response = await fetch(`${API_URL}/Auth/Login`, {
+                const response = await fetch(`${API_URL}/Auth/Login`, {  // Предполагаю, что путь к действию Login - /Auth/Login; измени, если контроллер другой
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -54,8 +52,8 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    sessionStorage.setItem("jwt", result.token);
-                    window.location.href = "/Main/Index";
+                    sessionStorage.setItem("jwt", result.token);  // Сохраняем токен в sessionStorage для клиентских запросов
+                    window.location.href = `${API_URL}/Main/Index`;
                 } else {
                     const text = await response.text();
                     errorDiv.textContent = text || "Невірний email або пароль";
