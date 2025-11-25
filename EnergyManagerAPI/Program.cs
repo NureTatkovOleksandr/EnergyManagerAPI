@@ -39,6 +39,8 @@ builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
 builder.Services.AddScoped<IScenarioService, ScenarioService>();
 builder.Services.AddScoped<IDailySummaryRepository, DailySummaryRepository>();
 builder.Services.AddScoped<IDailySummaryService, DailySummaryService>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
