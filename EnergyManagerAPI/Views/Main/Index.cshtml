@@ -56,6 +56,7 @@
         console.warn("NO JWT TOKEN!");
     }
         document.getElementById("generateReport").addEventListener("click", async () => {
+            console.log("pidor")
         try {
             const response = await fetch(`${API}/report/pdf`, {
                 method: "GET",

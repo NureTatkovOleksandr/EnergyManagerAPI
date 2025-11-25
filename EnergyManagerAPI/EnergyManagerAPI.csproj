@@ -7,12 +7,6 @@
     <UserSecretsId>c266a1c7-2fd8-45cd-96d3-d0a24d2c832c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
-	<ItemGroup>
-		<!-- **✅ DB Файл Копіюється Авто** -->
-		<Content Include="EnergyManagerDB.db">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="itext" Version="9.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
