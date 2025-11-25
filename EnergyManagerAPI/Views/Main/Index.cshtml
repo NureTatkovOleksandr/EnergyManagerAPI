@@ -55,6 +55,26 @@
     if (!token) {
         console.warn("NO JWT TOKEN!");
     }
-    // Убрана логика загрузки домов/устройств — теперь данные рендерятся на сервере
-    // Если нужно добавить JS для кнопок (autoOptimize, generateReport), реализуй здесь
+        document.getElementById("generateReport").addEventListener("click", async () => {
+        try {
+            const response = await fetch(`${API}/report/pdf`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error("Failed to generate report");
+            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "energy_report.pdf";
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    });
 </script>
