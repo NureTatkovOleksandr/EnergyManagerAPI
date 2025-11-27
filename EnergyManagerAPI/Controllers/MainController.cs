@@ -60,5 +60,24 @@ namespace EnergyManagerWeb.Controllers
             }
             return Ok(new { message = "✅ Devices optimized successfully." });
         }
+
+        [HttpPost("ToggleDevice/{deviceId}")]
+        public async Task<IActionResult> ToggleDevice(int deviceId)
+        {
+            var userId = User.GetUserId();
+            var device = await _deviceService.GetByIdAsync(deviceId);
+            if (device == null)
+            {
+                return NotFound(new { message = "❌ Device not found." });
+            }
+            var house = await _houseService.GetByIdAsync(device.HouseId, userId);
+            if (house == null || house.UserId != userId)
+            {
+                return Unauthorized(new { message = "❌ Unauthorized access to device." });
+            }
+            device.IsActive = !device.IsActive;
+            await _deviceService.UpdateAsync(device.Id,device,userId);
+            return Ok(new { message = "✅ Device toggled successfully.", isActive = device.IsActive });
+        }
     }
 }

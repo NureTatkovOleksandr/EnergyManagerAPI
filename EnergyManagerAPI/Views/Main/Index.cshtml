@@ -29,7 +29,10 @@
                                 {
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span>@device.Name <small class="text-muted">(@device.Type)</small></span>
-                                        <span style="color:red; font-weight:bold;">@device.TotalMeasurement</span>
+                                        <div class="d-flex align-items-center">
+                                            <span style="color:red; font-weight:bold;">@device.TotalMeasurement</span>
+                                            <button class="btn btn-sm toggle-device ms-2" style="background-color: @(device.IsActive ? "green" : "red"); color: white;" data-device-id="@device.Id">@(device.IsActive ? "On" : "Off")</button>
+                                        </div>
                                     </li>
                                 }
                             </ul>
@@ -54,6 +57,31 @@
     if (!token) {
         console.warn("NO JWT TOKEN!");
     }
+    document.querySelectorAll(".toggle-device").forEach(button => {
+        button.addEventListener("click", async (e) => {
+            const deviceId = e.target.dataset.deviceId;
+            try {
+                const response = await fetch(`${API}/Main/ToggleDevice/${deviceId}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error("Failed to toggle device");
+                }
+                const data = await response.json();
+                // Update button state
+                e.target.style.backgroundColor = data.isActive ? "green" : "red";
+                e.target.textContent = data.isActive ? "On" : "Off";
+                alert(data.message || "Device toggled successfully!");
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+    });
+
     document.getElementById("autoOptimize").addEventListener("click", async () => {
         try {
             const response = await fetch(`${API}/Main/OptimizeDevices`, {
@@ -74,7 +102,6 @@
             alert("Error: " + error.message);
         }
     });
-
     document.getElementById("generateReport").addEventListener("click", async () => {
         console.log("pidor")
         try {

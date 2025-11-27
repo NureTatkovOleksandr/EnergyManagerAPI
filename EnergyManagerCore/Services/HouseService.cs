@@ -55,7 +55,7 @@ namespace EnergyManagerCore.Services
         {
             var house = await _repo.GetByIdAsync(id);
             if (house == null || house.UserId != userId) return null;
-            return new HouseDto { Id = house.Id, Name = house.Name, Address = house.Address, TotalArea = house.TotalArea };
+            return new HouseDto { Id = house.Id, Name = house.Name, Address = house.Address, TotalArea = house.TotalArea, UserId = house.UserId };
         }
 
         public async Task<HouseDto> CreateAsync(CreateHouseDto dto, int userId)
