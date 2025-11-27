@@ -46,7 +46,6 @@
         </div>
     </div>
 </div>
-
 <script>
     const API = "https://energymanagerapi.onrender.com/api/v1";
     const userId = @System.Text.Json.JsonSerializer.Serialize(Model.UserId);
@@ -55,8 +54,29 @@
     if (!token) {
         console.warn("NO JWT TOKEN!");
     }
-        document.getElementById("generateReport").addEventListener("click", async () => {
-            console.log("pidor")
+    document.getElementById("autoOptimize").addEventListener("click", async () => {
+        try {
+            const response = await fetch(`${API}/Main/OptimizeDevices`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+            if (!response.ok) {
+                throw new Error("Failed to optimize devices");
+            }
+            const data = await response.json();
+            alert(data.message || "Optimization completed successfully!");
+            // Опционально: перезагрузить страницу или обновить данные
+            location.reload();
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    });
+
+    document.getElementById("generateReport").addEventListener("click", async () => {
+        console.log("pidor")
         try {
             const response = await fetch(`${API}/report/pdf`, {
                 method: "GET",
